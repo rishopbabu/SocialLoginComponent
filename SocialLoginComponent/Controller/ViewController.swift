@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import GoogleSignIn
+import AuthenticationServices
 
 class ViewController: UIViewController {
     
@@ -27,6 +29,28 @@ class ViewController: UIViewController {
     @objc
     private func googleButtonTapped() {
         print("Google Button tapped.....")
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) { signInResult, error in
+            guard error == nil else {
+                print("Google signin throws error: ", error?.localizedDescription as Any)
+                return
+            }
+            
+            print("Google Signin Successfull...")
+            
+            guard let signInResult = signInResult else {
+                print("Something wrong in login....")
+                return
+            }
+            
+            let user = signInResult.user
+            print("User: ", user)
+            let userID = user.userID
+            let userName = user.profile?.name
+            let userEmail = user.profile?.email
+            let userProfilePic = user.profile?.imageURL(withDimension: 320)
+            let authcode = signInResult.serverAuthCode
+            print("userID: \(String(describing: userID)) \nUserName: \(String(describing: userName)) \nUserEmail: \(String(describing: userEmail)) \n     userProfilePic: \(String(describing: userProfilePic)) \nauthCode: \(String(describing: authcode))")
+        }
     }
     
     @objc
@@ -37,8 +61,14 @@ class ViewController: UIViewController {
     @objc
     private func appleButtonTapped() {
         print("Apple Button tapped.....")
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+        authorizationController.delegate = self
+        authorizationController.performRequests()
     }
-    
+        
     private func setupViews() {
         let titleLabelItem = UILabel()
         titleLabelItem.translatesAutoresizingMaskIntoConstraints = false
@@ -117,3 +147,21 @@ class ViewController: UIViewController {
 
 }
 
+extension ViewController: ASAuthorizationControllerDelegate {
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        if let appleIDCredentials = authorization.credential as? ASAuthorizationAppleIDCredential {
+            let userIdentifier = appleIDCredentials.user
+            let fullName = appleIDCredentials.state
+            let email = appleIDCredentials.email
+            let profilePic = appleIDCredentials
+            print("Apple Login successfull.....")
+            print("UserIdentifier: \(userIdentifier) \nFullname: \(String(describing: fullName)) \nEmail: \(String(describing: email))")
+        }
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("Error login Apple")
+    }
+    
+}
