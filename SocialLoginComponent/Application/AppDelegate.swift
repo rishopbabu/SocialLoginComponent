@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  SocialLoginComponent
 //
-//  Created by Mac-OBS-51 on 15/04/24.
+//  Created by Rishop Babu on 15/04/24.
 //
 
 import UIKit
